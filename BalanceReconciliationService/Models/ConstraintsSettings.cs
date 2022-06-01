@@ -7,6 +7,6 @@
             TECHNOLOGIC,
             METROLOGIC
         }
-        public ConstraintsSettingsType balanceSettingsConstraints { get; set; }
+        public ConstraintsSettingsType Type { get; set; }
     }
 }
