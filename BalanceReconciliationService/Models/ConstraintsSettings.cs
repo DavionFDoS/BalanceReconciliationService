@@ -4,8 +4,8 @@
     {
         public enum ConstraintsSettingsType
         {
-            TECHNOLOGIC,
-            METROLOGIC
+            Technological,
+            Metrological
         }
         public ConstraintsSettingsType Type { get; set; }
     }
