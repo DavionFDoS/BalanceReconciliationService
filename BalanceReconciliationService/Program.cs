@@ -14,10 +14,14 @@ if (app.Environment.IsDevelopment())
 app.UseHttpsRedirection();
 
 
-app.MapGet("/reconcileBalance", () =>
+app.MapPost("/reconcileBalance", async (MeasuredInputs measuredInputs) =>
 {
-
+    await Task.Run(() =>
+    {
+        var solver = new AccordSolver(measuredInputs);
+        return solver.Solve();        
+    });
 })
-.WithName("ReconcileBalance");
+.WithName("ReconcileBalance").RequireCors("allowAny");
 
 app.Run();

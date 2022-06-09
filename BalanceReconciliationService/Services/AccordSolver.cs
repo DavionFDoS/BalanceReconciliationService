@@ -19,15 +19,13 @@ namespace BalanceReconciliationService.Services
         private DenseVector lowerTechnologicalBound;    // Вектор нижних ограничений вектора x
         private SparseMatrix H;                         // H = I * W
         private SparseVector dVector;                   // d = H * x0
-        private DenseVector absoluteTolerance;          //вектор абсолютной погрешности
 
-        public AccordSolver(MeasuredInputs measuredInputs, GraphBuilder graphBuilder)
+        public AccordSolver(MeasuredInputs measuredInputs)
         {
             ArgumentNullException.ThrowIfNull(measuredInputs, nameof(measuredInputs));
-            ArgumentNullException.ThrowIfNull(graphBuilder, nameof(graphBuilder));
             
             this.measuredInputs = measuredInputs;
-            this.graphBuilder = graphBuilder;
+            graphBuilder = new GraphBuilder(measuredInputs);
             QuadraticProgrammingPreparations();
         }
 
@@ -61,7 +59,6 @@ namespace BalanceReconciliationService.Services
             lowerMetrologicalBound = DenseVector.OfEnumerable(measuredInputs.FlowsData.Select(x => x.LowerMetrologicalBound));
             upperTechnologicalBound = DenseVector.OfEnumerable(measuredInputs.FlowsData.Select(x => x.UpperTechnologicalBound));
             lowerTechnologicalBound = DenseVector.OfEnumerable(measuredInputs.FlowsData.Select(x => x.LowerTechnologicalBound));
-            absoluteTolerance = DenseVector.OfEnumerable(measuredInputs.FlowsData.Select(x => x.Tolerance));
             reconciledValues = new SparseVector(incidenceMatrix.RowCount); reconciledValues = new SparseVector(incidenceMatrix.RowCount);
             H = measureIndicator * standardDeviation;
             dVector = H * (-1) * measuredValues;           
