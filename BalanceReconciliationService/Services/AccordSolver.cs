@@ -59,7 +59,7 @@ namespace BalanceReconciliationService.Services
             lowerMetrologicalBound = DenseVector.OfEnumerable(measuredInputs.FlowsData.Select(x => x.LowerMetrologicalBound));
             upperTechnologicalBound = DenseVector.OfEnumerable(measuredInputs.FlowsData.Select(x => x.UpperTechnologicalBound));
             lowerTechnologicalBound = DenseVector.OfEnumerable(measuredInputs.FlowsData.Select(x => x.LowerTechnologicalBound));
-            reconciledValues = new SparseVector(incidenceMatrix.RowCount); reconciledValues = new SparseVector(incidenceMatrix.RowCount);
+            reconciledValues = new SparseVector(incidenceMatrix.RowCount);
             H = measureIndicator * standardDeviation;
             dVector = H * (-1) * measuredValues;           
         }
@@ -93,14 +93,14 @@ namespace BalanceReconciliationService.Services
                     constraints.Add(new LinearConstraint(1)
                     {
                         VariablesAtIndices = new[] { j },
-                        ShouldBe = ConstraintType.GreaterThanOrEqualTo,
+                        ShouldBe = ConstraintType.LesserThanOrEqualTo,
                         Value = measuredInputs.FlowsData[j].UpperMetrologicalBound
                     });
 
                     constraints.Add(new LinearConstraint(1)
                     {
                         VariablesAtIndices = new[] { j },
-                        ShouldBe = ConstraintType.LesserThanOrEqualTo,
+                        ShouldBe = ConstraintType.GreaterThanOrEqualTo,
                         Value = measuredInputs.FlowsData[j].LowerMetrologicalBound
                     });
                 }
@@ -141,13 +141,14 @@ namespace BalanceReconciliationService.Services
 
             var reconciledOutputs = new ReconciledOutputs();
             var reconciledFlowDatas = new List<ReconciledFlowData>();
+
             for (int i = 0; i < solver.Solution.Length; i++)
             {
                 reconciledFlowDatas.Add(new ReconciledFlowData()
                 {
                     Id = measuredInputs.FlowsData[i].Id,
                     Name = measuredInputs.FlowsData[i].Name,
-                    ReconciliatedValue = solver.Solution[i],
+                    ReconciledValue = solver.Solution[i],
                     SourceId = measuredInputs.FlowsData[i].SourceId,
                     DestinationId = measuredInputs.FlowsData[i].DestinationId,
                     ChosenConstraintUpperBound = (measuredInputs.ConstraintsSettings.Type == 0 || measureIndicator[i, i] == 0.0) // 0 = ConstraintsSettings.ConstraintsSettingsType.Technological
@@ -156,6 +157,7 @@ namespace BalanceReconciliationService.Services
                         ? lowerTechnologicalBound[i] : lowerMetrologicalBound[i]
                 });
             }
+
             reconciledOutputs.CalculationTime = (calculationTimeFinish - calculationTimeStart).TotalSeconds;
             reconciledOutputs.ReconciledFlowDatas = reconciledFlowDatas;
             reconciledOutputs.MeasuredDataDisbalance = measuredDataDisbalance;

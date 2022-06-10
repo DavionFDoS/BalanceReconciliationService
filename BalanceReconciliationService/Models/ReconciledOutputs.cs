@@ -6,7 +6,6 @@
         public double MeasuredDataDisbalance { get; set; }
         public double ReconciledDataDisbalance { get; set; }
         public string Status { get; set; }
-
         public List<ReconciledFlowData> ReconciledFlowDatas { get; set; }
     }
 }

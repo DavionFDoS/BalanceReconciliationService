@@ -3,9 +3,9 @@
     public class FlowData
     {
         public Guid Id { get; set; }
-        public string? SourceId { get; set; }
-        public string? DestinationId { get; set; }
-        public string? Name { get; set; }
+        public string SourceId { get; set; }
+        public string DestinationId { get; set; }
+        public string Name { get; set; }
         public double Measured { get; set; }
         public double UpperMetrologicalBound { get; set; }
         public double LowerMetrologicalBound { get; set; }
