@@ -1,5 +1,8 @@
 ﻿namespace BalanceReconciliationService.Services
 {
+    /// <summary>
+    /// Class that builds graph as incidence matrix
+    /// </summary>
     public class GraphBuilder
     {
         // Список вершин

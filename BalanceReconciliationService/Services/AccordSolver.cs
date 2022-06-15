@@ -4,88 +4,39 @@ using MathNet.Numerics.LinearAlgebra.Double;
 
 namespace BalanceReconciliationService.Services
 {
+    /// <summary>
+    /// QPSolver using the Accord.NET library
+    /// </summary>
     public class AccordSolver : ISolver
     {
-        private readonly GraphBuilder graphBuilder;
-        private readonly MeasuredInputs measuredInputs;
-        private SparseVector measuredValues;            // Вектор измеренных значений (x0)
-        private SparseMatrix measureIndicator;          // Матрица измеряемости (I)
-        private SparseMatrix standardDeviation;         // Матрица метрологической погрешности (W)
-        private SparseMatrix incidenceMatrix;           // Матрица инцидентности / связей
-        private SparseVector reconciledValues;          // Вектор b
-        private DenseVector upperMetrologicalBound;     // Вектор верхних ограничений вектора x
-        private DenseVector lowerMetrologicalBound;     // Вектор нижних ограничений вектора x
-        private DenseVector upperTechnologicalBound;    // Вектор верхних ограничений вектора x
-        private DenseVector lowerTechnologicalBound;    // Вектор нижних ограничений вектора x
-        private SparseMatrix H;                         // H = I * W
-        private SparseVector dVector;                   // d = H * x0
-
-        public AccordSolver(MeasuredInputs measuredInputs)
+        private readonly MatrixDataPreparer dataPreparer;
+        public AccordSolver(MatrixDataPreparer matrixDataPreparer)
         {
-            ArgumentNullException.ThrowIfNull(measuredInputs, nameof(measuredInputs));
-            
-            this.measuredInputs = measuredInputs;
-            graphBuilder = new GraphBuilder(measuredInputs);
-            QuadraticProgrammingPreparations();
-        }
-
-        private void QuadraticProgrammingPreparations()
-        {
-            incidenceMatrix = SparseMatrix.OfArray(graphBuilder.GetIncidenceMatrix());
-            measuredValues = SparseVector.OfEnumerable(measuredInputs.FlowsData.Select(x=>x.Measured));
-            measureIndicator = SparseMatrix.OfDiagonalArray(measuredInputs.FlowsData.Select(x => x.IsMeasured ? 1.0 : 0.0).ToArray());
-            standardDeviation = SparseMatrix.OfDiagonalArray(measuredInputs.FlowsData.Select(x =>
-            {
-                if (!x.IsMeasured)
-                {
-                    return 1.0;
-                }
-                else
-                {
-                    double tolerance = 1.0 / Math.Pow(x.Tolerance, 2);
-                    if (Double.IsInfinity(tolerance))
-                    {
-                        return 1.0;
-                    }
-                    if (Double.IsNaN(tolerance))
-                    {
-                        throw new ArgumentException("The value was NaN");
-                    }
-
-                    return tolerance;
-                }
-            }).ToArray());
-            upperMetrologicalBound = DenseVector.OfEnumerable(measuredInputs.FlowsData.Select(x => x.UpperMetrologicalBound));
-            lowerMetrologicalBound = DenseVector.OfEnumerable(measuredInputs.FlowsData.Select(x => x.LowerMetrologicalBound));
-            upperTechnologicalBound = DenseVector.OfEnumerable(measuredInputs.FlowsData.Select(x => x.UpperTechnologicalBound));
-            lowerTechnologicalBound = DenseVector.OfEnumerable(measuredInputs.FlowsData.Select(x => x.LowerTechnologicalBound));
-            reconciledValues = new SparseVector(incidenceMatrix.RowCount);
-            H = measureIndicator * standardDeviation;
-            dVector = H * (-1) * measuredValues;           
+            dataPreparer = matrixDataPreparer;
         }
 
         public ReconciledOutputs Solve()
         {
-            var func = new QuadraticObjectiveFunction(H.ToArray(), dVector.ToArray());
+            var func = new QuadraticObjectiveFunction(dataPreparer.H.ToArray(), dataPreparer.DVector.ToArray());
             var constraints = new List<LinearConstraint>();
             //добавление ограничений узлов
-            for (var j = 0; j < measuredValues.ToArray().Length; j++)
+            for (var j = 0; j < dataPreparer.MeasuredValues.ToArray().Length; j++)
             {
-                if (measuredInputs.ConstraintsSettings.Type == 0 || measureIndicator[j, j] == 0.0)
+                if (dataPreparer.MeasuredInputs.ConstraintsSettings.Type == 0 || dataPreparer.MeasureIndicator[j, j] == 0.0)
                 {
 
                     constraints.Add(new LinearConstraint(1)
                     {
                         VariablesAtIndices = new[] { j },
                         ShouldBe = ConstraintType.LesserThanOrEqualTo,
-                        Value = measuredInputs.FlowsData[j].UpperTechnologicalBound
+                        Value = dataPreparer.UpperTechnologicalBound[j]
                     });
 
                     constraints.Add(new LinearConstraint(1)
                     {
                         VariablesAtIndices = new[] { j },
                         ShouldBe = ConstraintType.GreaterThanOrEqualTo,
-                        Value = measuredInputs.FlowsData[j].LowerTechnologicalBound
+                        Value = dataPreparer.LowerTechnologicalBound[j]
                     });                  
                 }
                 else
@@ -94,25 +45,25 @@ namespace BalanceReconciliationService.Services
                     {
                         VariablesAtIndices = new[] { j },
                         ShouldBe = ConstraintType.LesserThanOrEqualTo,
-                        Value = measuredInputs.FlowsData[j].UpperMetrologicalBound
+                        Value = dataPreparer.UpperMetrologicalBound[j]
                     });
 
                     constraints.Add(new LinearConstraint(1)
                     {
                         VariablesAtIndices = new[] { j },
                         ShouldBe = ConstraintType.GreaterThanOrEqualTo,
-                        Value = measuredInputs.FlowsData[j].LowerMetrologicalBound
+                        Value = dataPreparer.LowerMetrologicalBound[j]
                     });
                 }
             }
 
-            for (var j = 0; j < reconciledValues.ToArray().Length; j++)
+            for (var j = 0; j < dataPreparer.ReconciledValues.ToArray().Length; j++)
             {
-                var notNullElements = Array.FindAll(incidenceMatrix.ToArray().GetRow(j), x => Math.Abs(x) > 0.0000001);
+                var notNullElements = Array.FindAll(dataPreparer.IncidenceMatrix.ToArray().GetRow(j), x => Math.Abs(x) > 0.0000001);
                 var notNullElementsIndexes = new List<int>();
-                for (var k = 0; k < measuredValues.ToArray().Length; k++)
+                for (var k = 0; k < dataPreparer.MeasuredValues.ToArray().Length; k++)
                 {
-                    if (Math.Abs(incidenceMatrix[j, k]) > 0.0000001)
+                    if (Math.Abs(dataPreparer.IncidenceMatrix[j, k]) > 0.0000001)
                     {
                         notNullElementsIndexes.Add(k);
                     }
@@ -123,7 +74,7 @@ namespace BalanceReconciliationService.Services
                     VariablesAtIndices = notNullElementsIndexes.ToArray(),
                     CombinedAs = notNullElements,
                     ShouldBe = ConstraintType.EqualTo,
-                    Value = reconciledValues[j]
+                    Value = dataPreparer.ReconciledValues[j]
                 });
             }
 
@@ -136,8 +87,10 @@ namespace BalanceReconciliationService.Services
             }
             DateTime calculationTimeFinish = DateTime.Now;
 
-            double measuredDataDisbalance = incidenceMatrix.Multiply(measuredValues).Subtract(reconciledValues).ToArray().Euclidean();
-            double reconciledDataDisbalance = incidenceMatrix.Multiply(SparseVector.OfVector(new DenseVector(solver.Solution))).Subtract(reconciledValues).ToArray().Euclidean();
+            var measuredDataDisbalance = dataPreparer.IncidenceMatrix.Multiply(dataPreparer.MeasuredValues)
+                .Subtract(dataPreparer.ReconciledValues).ToArray().Euclidean();
+            var reconciledDataDisbalance = dataPreparer.IncidenceMatrix.Multiply(SparseVector.OfVector(new DenseVector(solver.Solution)))
+                .Subtract(dataPreparer.ReconciledValues).ToArray().Euclidean();
 
             var reconciledOutputs = new ReconciledOutputs();
             var reconciledFlowDatas = new List<ReconciledFlowData>();
@@ -146,15 +99,15 @@ namespace BalanceReconciliationService.Services
             {
                 reconciledFlowDatas.Add(new ReconciledFlowData()
                 {
-                    Id = measuredInputs.FlowsData[i].Id,
-                    Name = measuredInputs.FlowsData[i].Name,
+                    Id = dataPreparer.MeasuredInputs.FlowsData[i].Id,
+                    Name = dataPreparer.MeasuredInputs.FlowsData[i].Name,
                     ReconciledValue = solver.Solution[i],
-                    SourceId = measuredInputs.FlowsData[i].SourceId,
-                    DestinationId = measuredInputs.FlowsData[i].DestinationId,
-                    ChosenConstraintUpperBound = (measuredInputs.ConstraintsSettings.Type == 0 || measureIndicator[i, i] == 0.0) // 0 = ConstraintsSettings.ConstraintsSettingsType.Technological
-                        ? upperTechnologicalBound[i] : upperMetrologicalBound[i],
-                    ChosenConstraintLowerBound = (measuredInputs.ConstraintsSettings.Type == 0 || measureIndicator[i, i] == 0.0) // 0 = ConstraintsSettings.ConstraintsSettingsType.Technological
-                        ? lowerTechnologicalBound[i] : lowerMetrologicalBound[i]
+                    SourceId = dataPreparer.MeasuredInputs.FlowsData[i].SourceId,
+                    DestinationId = dataPreparer.MeasuredInputs.FlowsData[i].DestinationId,
+                    ChosenConstraintUpperBound = (dataPreparer.MeasuredInputs.ConstraintsSettings.Type == 0 || dataPreparer.MeasureIndicator[i, i] == 0.0) 
+                        ? dataPreparer.UpperTechnologicalBound[i] : dataPreparer.UpperMetrologicalBound[i],
+                    ChosenConstraintLowerBound = (dataPreparer.MeasuredInputs.ConstraintsSettings.Type == 0 || dataPreparer.MeasureIndicator[i, i] == 0.0) 
+                        ? dataPreparer.LowerTechnologicalBound[i] : dataPreparer.LowerMetrologicalBound[i]  // 0 = ConstraintsSettings.ConstraintsSettingsType.Technological
                 });
             }
 

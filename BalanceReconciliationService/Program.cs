@@ -30,7 +30,8 @@ app.MapPost("/reconcileBalance", async Task<ReconciledOutputs> (MeasuredInputs m
 {
     return await Task.Run(() =>
     {
-        var solver = new AccordSolver(measuredInputs);
+        var dataPreparer = new MatrixDataPreparer(measuredInputs);
+        var solver = new AccordSolver(dataPreparer);
         return solver.Solve();
     });
 })
