@@ -11,8 +11,7 @@ namespace Tests
 {
     public class Tests
     {
-        const string fileName = @".\NewModel.json";
-       
+        const string fileName = @".\NewModel.json";       
         private readonly MeasuredInputs? measuredInputs;
         private readonly MatrixDataPreparer dataPreparer;
         private readonly ISolver solver;
