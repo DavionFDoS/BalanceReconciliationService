@@ -26,7 +26,7 @@ namespace BalanceReconciliationService.Services
             ArgumentNullException.ThrowIfNull(measuredInputs, nameof(measuredInputs));
 
             MeasuredInputs = measuredInputs;
-            GraphBuilder = new GraphBuilder(measuredInputs);
+            GraphBuilder = new GraphBuilder(MeasuredInputs);
 
             QuadraticProgrammingPreparations();
         }
