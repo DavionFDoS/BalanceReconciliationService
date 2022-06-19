@@ -55,10 +55,14 @@ namespace Tests
         {
             var expectedUpperTechnologicalBounds = new[] { 1000.0, 1000.0, 1000.0, 1000.0, 1000.0, 1000.0, 1000.0 };
             var expectedLowerTechnologicalBounds = new[] { 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0 };
+            var expectedUpperMetrologicalBounds = new[] { 10.205, 3.155, 7.514, 2.025, 5.195, 4.138, 1.011 };
+            var expectedLowerMetrologicalBounds = new[] { 9.805, 2.912, 6.148, 1.945, 4.991, 3.976, 0.971 };
             var expectedMeasuredData = new[] { 10.005, 3.033, 6.831, 1.985, 5.093, 4.057 , 0.991 };
            
             Assert.Equal(expectedUpperTechnologicalBounds, dataPreparer.UpperTechnologicalBound.ToArray());
             Assert.Equal(expectedLowerTechnologicalBounds, dataPreparer.LowerTechnologicalBound.ToArray());
+            Assert.Equal(expectedUpperMetrologicalBounds, dataPreparer.UpperMetrologicalBound.ToArray());
+            Assert.Equal(expectedLowerMetrologicalBounds, dataPreparer.LowerMetrologicalBound.ToArray());
             Assert.Equal(expectedMeasuredData, dataPreparer.MeasuredValues.ToArray());
         }
     }
