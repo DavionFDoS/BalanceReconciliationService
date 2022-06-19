@@ -29,8 +29,8 @@ namespace Tests
             var expectedSolution = new[] { 10.055612418500504, 3.0144745895183522, 7.041137828982151, 1.9822547563048074, 5.058883072677343, 4.067257698582969, 0.9916253740943739};
             List<double> actual = new();
 
-            var reconsiledOutput = solver.Solve();
-            foreach (var reconciledFlowData in reconsiledOutput.ReconciledFlowDatas)
+            var reconsiledOutputs = solver.Solve();
+            foreach (var reconciledFlowData in reconsiledOutputs.ReconciledFlowDatas)
             {
                 actual.Add(reconciledFlowData.ReconciledValue);
             }
