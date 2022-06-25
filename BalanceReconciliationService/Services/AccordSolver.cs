@@ -15,11 +15,10 @@ namespace BalanceReconciliationService.Services
             dataPreparer = matrixDataPreparer;
         }
 
-        public ReconciledOutputs Solve()
+        private List<LinearConstraint> InitializeConstraints()
         {
-            var func = new QuadraticObjectiveFunction(dataPreparer.H.ToArray(), dataPreparer.DVector.ToArray());
             var constraints = new List<LinearConstraint>();
-            //добавление ограничений узлов
+
             for (var j = 0; j < dataPreparer.MeasuredValues.ToArray().Length; j++)
             {
                 if (dataPreparer.MeasuredInputs.ConstraintsSettings.Type == 0 || dataPreparer.MeasureIndicator[j, j] == 0.0)
@@ -37,7 +36,7 @@ namespace BalanceReconciliationService.Services
                         VariablesAtIndices = new[] { j },
                         ShouldBe = ConstraintType.GreaterThanOrEqualTo,
                         Value = dataPreparer.LowerTechnologicalBound[j]
-                    });                  
+                    });
                 }
                 else
                 {
@@ -77,6 +76,14 @@ namespace BalanceReconciliationService.Services
                     Value = dataPreparer.ReconciledValues[j]
                 });
             }
+
+            return constraints;
+        }
+
+        public ReconciledOutputs Solve()
+        {
+            var func = new QuadraticObjectiveFunction(dataPreparer.H.ToArray(), dataPreparer.DVector.ToArray());
+            var constraints = InitializeConstraints();
 
             var solver = new GoldfarbIdnani(func, constraints);
 
