@@ -1,3 +1,4 @@
+using BalanceReconciliationService.Extensions;
 using Microsoft.AspNetCore.Http.Json;
 using Microsoft.AspNetCore.Mvc;
 using System.Text.Json;
@@ -25,6 +26,7 @@ if (app.Environment.IsDevelopment())
 
 app.UseCors("allowAny");
 app.UseHttpsRedirection();
+app.ConfigureCustomExceptionMiddleware();
 
 app.MapPost("/reconcileBalance", async Task<ReconciledOutputs> (MeasuredInputs measuredInputs) =>
 {

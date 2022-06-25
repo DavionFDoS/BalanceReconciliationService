@@ -90,7 +90,7 @@ namespace BalanceReconciliationService.Services
             DateTime calculationTimeStart = DateTime.Now;
             if (!solver.Minimize())
             {
-                throw new ApplicationException("Failed to reconcile");
+                throw new Exception("Exception while trying to reconcile");
             }
             DateTime calculationTimeFinish = DateTime.Now;
 
