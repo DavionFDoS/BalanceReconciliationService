@@ -23,7 +23,7 @@ namespace BalanceReconciliationService.CustomExceptionMiddleware
             }
         }
 
-        private Task HandleExceptionAsync(HttpContext context)
+        private static Task HandleExceptionAsync(HttpContext context)
         {
             context.Response.StatusCode = (int)HttpStatusCode.InternalServerError;
             context.Response.ContentType = "application/json";

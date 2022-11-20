@@ -11,11 +11,9 @@ namespace BalanceReconciliationService.Services
     public class AccordSolver : ISolver
     {
         private readonly MatrixDataPreparer dataPreparer;
-        private readonly ILogger<AccordSolver> _logger;
-        public AccordSolver(MatrixDataPreparer matrixDataPreparer, ILogger<AccordSolver> logger = null)
+        public AccordSolver(MatrixDataPreparer matrixDataPreparer)
         {
             dataPreparer = matrixDataPreparer;
-            _logger = logger;
         }
 
         private List<LinearConstraint> InitializeConstraints()
@@ -80,7 +78,7 @@ namespace BalanceReconciliationService.Services
                 });
             }
 
-            _logger.LogInformation("List of linear constraints has been recieved");
+            Log.Information("List of linear constraints has been recieved");
 
             return constraints;
         }
@@ -89,13 +87,13 @@ namespace BalanceReconciliationService.Services
         {
             var func = new QuadraticObjectiveFunction(dataPreparer.H.ToArray(), dataPreparer.DVector.ToArray());
 
-            _logger.LogInformation("Quadratic function has been initialized");
+            Log.Information("Quadratic function has been initialized");
 
             var constraints = InitializeConstraints();
 
             var solver = new GoldfarbIdnani(func, constraints);
 
-            _logger.LogInformation("Accord solver has been initialized");
+            Log.Information("Accord solver has been initialized");
 
             Stopwatch sw = Stopwatch.StartNew();
             if (!solver.Minimize())
@@ -104,7 +102,7 @@ namespace BalanceReconciliationService.Services
             }
             sw.Stop();
 
-            _logger.LogInformation("Function has been minimized in {time} ms", sw.ElapsedMilliseconds);
+            Log.Information("Function has been minimized in {time} ms", sw.ElapsedMilliseconds);
 
             var measuredDataDisbalance = dataPreparer.IncidenceMatrix.Multiply(dataPreparer.MeasuredValues)
                 .Subtract(dataPreparer.ReconciledValues).ToArray().Euclidean();
@@ -136,7 +134,7 @@ namespace BalanceReconciliationService.Services
             reconciledOutputs.ReconciledDataDisbalance = reconciledDataDisbalance;
             reconciledOutputs.Status = "Success";
 
-            _logger.LogInformation("Calculations has been completed with status: {status}", reconciledOutputs.Status);
+            Log.Information("Calculations has been completed with status: {status}", reconciledOutputs.Status);
 
             return reconciledOutputs;
         }
