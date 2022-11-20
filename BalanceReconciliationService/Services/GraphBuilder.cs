@@ -9,11 +9,13 @@
         private readonly List<Vertex> vertexList;
 
         private readonly MeasuredInputs measuredInputs;
-        public GraphBuilder(MeasuredInputs measuredInputs)
+        private readonly ILogger<GraphBuilder> _logger;
+        public GraphBuilder(MeasuredInputs measuredInputs, ILogger<GraphBuilder> logger = null)
         {
             ArgumentNullException.ThrowIfNull(nameof(measuredInputs));
             this.measuredInputs = measuredInputs;
-            vertexList = new List<Vertex>();            
+            vertexList = new List<Vertex>();
+            _logger = logger;
         }
 
         private void GetVertexList()
@@ -72,6 +74,8 @@
                     }
                 }
             }
+
+            _logger.LogInformation("VertexList has been recieved");
         }
 
         public double[,] GetIncidenceMatrix()
@@ -96,6 +100,8 @@
                     }
                 }
             }
+
+            _logger.LogInformation("Incidence matrix has been recieved");
 
             return incidenceMatrix;
         }

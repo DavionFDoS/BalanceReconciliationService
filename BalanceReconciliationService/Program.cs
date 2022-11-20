@@ -1,4 +1,5 @@
 using BalanceReconciliationService.Extensions;
+using Serilog;
 using Microsoft.AspNetCore.Http.Json;
 using Microsoft.AspNetCore.Mvc;
 using System.Text.Json;
@@ -15,6 +16,11 @@ builder.Services.AddCors(options => options.AddPolicy("allowAny", o =>
     o.AllowAnyHeader();
     o.AllowAnyMethod();
 }));
+
+builder.Host.UseSerilog((context, config) =>
+{
+    config.WriteTo.Console();
+});
 
 var app = builder.Build();
 

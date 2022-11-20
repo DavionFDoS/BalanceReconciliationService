@@ -21,7 +21,9 @@ namespace BalanceReconciliationService.Services
         public SparseMatrix H { get; private set; }                         // H = I * W
         public SparseVector DVector { get; private set; }                   // d = H * x0
 
-        public MatrixDataPreparer(MeasuredInputs measuredInputs)
+        private readonly ILogger<MatrixDataPreparer> _logger;
+
+        public MatrixDataPreparer(MeasuredInputs measuredInputs, ILogger<MatrixDataPreparer> logger = null)
         {
             ArgumentNullException.ThrowIfNull(measuredInputs, nameof(measuredInputs));
 
@@ -29,6 +31,7 @@ namespace BalanceReconciliationService.Services
             GraphBuilder = new GraphBuilder(MeasuredInputs);
 
             QuadraticProgrammingPreparations();
+            _logger = logger;
         }
         private void QuadraticProgrammingPreparations()
         {
@@ -63,6 +66,8 @@ namespace BalanceReconciliationService.Services
             ReconciledValues = new SparseVector(IncidenceMatrix.RowCount);
             H = MeasureIndicator * StandardDeviation;
             DVector = H * (-1) * MeasuredValues;
+
+            _logger.LogInformation("Matrix data prepared");
         }
     }
 }

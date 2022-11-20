@@ -1,6 +1,7 @@
 ﻿using Accord.Math;
 using Accord.Math.Optimization;
 using MathNet.Numerics.LinearAlgebra.Double;
+using System.Diagnostics;
 
 namespace BalanceReconciliationService.Services
 {
@@ -10,9 +11,11 @@ namespace BalanceReconciliationService.Services
     public class AccordSolver : ISolver
     {
         private readonly MatrixDataPreparer dataPreparer;
-        public AccordSolver(MatrixDataPreparer matrixDataPreparer)
+        private readonly ILogger<AccordSolver> _logger;
+        public AccordSolver(MatrixDataPreparer matrixDataPreparer, ILogger<AccordSolver> logger = null)
         {
             dataPreparer = matrixDataPreparer;
+            _logger = logger;
         }
 
         private List<LinearConstraint> InitializeConstraints()
@@ -77,22 +80,31 @@ namespace BalanceReconciliationService.Services
                 });
             }
 
+            _logger.LogInformation("List of linear constraints has been recieved");
+
             return constraints;
         }
 
         public ReconciledOutputs Solve()
         {
             var func = new QuadraticObjectiveFunction(dataPreparer.H.ToArray(), dataPreparer.DVector.ToArray());
+
+            _logger.LogInformation("Quadratic function has been initialized");
+
             var constraints = InitializeConstraints();
 
             var solver = new GoldfarbIdnani(func, constraints);
 
-            DateTime calculationTimeStart = DateTime.Now;
+            _logger.LogInformation("Accord solver has been initialized");
+
+            Stopwatch sw = Stopwatch.StartNew();
             if (!solver.Minimize())
             {
                 throw new Exception("Exception while trying to reconcile");
             }
-            DateTime calculationTimeFinish = DateTime.Now;
+            sw.Stop();
+
+            _logger.LogInformation("Function has been minimized in {time} ms", sw.ElapsedMilliseconds);
 
             var measuredDataDisbalance = dataPreparer.IncidenceMatrix.Multiply(dataPreparer.MeasuredValues)
                 .Subtract(dataPreparer.ReconciledValues).ToArray().Euclidean();
@@ -118,11 +130,13 @@ namespace BalanceReconciliationService.Services
                 });
             }
 
-            reconciledOutputs.CalculationTime = (calculationTimeFinish - calculationTimeStart).TotalSeconds;
+            reconciledOutputs.CalculationTime = sw.ElapsedMilliseconds;
             reconciledOutputs.ReconciledFlowDatas = reconciledFlowDatas;
             reconciledOutputs.MeasuredDataDisbalance = measuredDataDisbalance;
             reconciledOutputs.ReconciledDataDisbalance = reconciledDataDisbalance;
             reconciledOutputs.Status = "Success";
+
+            _logger.LogInformation("Calculations has been completed with status: {status}", reconciledOutputs.Status);
 
             return reconciledOutputs;
         }
