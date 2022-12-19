@@ -12,23 +12,29 @@ namespace BalanceReconciliationService.Services
             _dataPreparer = dataPreparer;
         }
 
-        public double GetGlobalTest()
+        /// <summary>
+        /// Use this method if you need to get Global Test of the source system
+        /// </summary>
+        /// <returns></returns>
+        public double GetSourceSystemGlobalTest()
         {
             var x0 = _dataPreparer.MeasuredValues.ToArray();
             var a = _dataPreparer.IncidenceMatrix.ToArray();
-            var countOfThreads = _dataPreparer.MeasuredValues.Count;
-            var measurability = new double[countOfThreads];
-            var tolerance = new double[countOfThreads];
+            var measurability = _dataPreparer.MeasureIndicator.Diagonal().ToArray();
+            var tolerance = _dataPreparer.Tolerance;
 
-            for (int i = 0; i < countOfThreads; i++)
-            {
-                measurability[i] = _dataPreparer.MeasureIndicator[i, i];
-                tolerance[i] = _dataPreparer.MeasuredInputs.FlowsData[i].Tolerance;
-            }
-
-            return StartGlobalTest(x0, a, measurability, tolerance);
+            return GlobalTest(x0, a, measurability, tolerance);
         }
-        private static double StartGlobalTest(double[] x0, double[,] a, double[] measurability, double[] tolerance)
+
+        /// <summary>
+        /// Use this method if you need to get Global Test with custom parameters 
+        /// </summary>
+        /// <param name="x0"></param>
+        /// <param name="a"></param>
+        /// <param name="measurability"></param>
+        /// <param name="tolerance"></param>
+        /// <returns></returns>
+        public double GlobalTest(double[] x0, double[,] a, double[] measurability, double[] tolerance)
         {
             var aMatrix = SparseMatrix.OfArray(a);
             var aTransposedMatrix = SparseMatrix.OfMatrix(aMatrix.Transpose());

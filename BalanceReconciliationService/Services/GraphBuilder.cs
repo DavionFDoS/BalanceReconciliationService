@@ -8,20 +8,20 @@
         // Список вершин
         private readonly List<Vertex> vertexList;
 
-        private readonly MeasuredInputs measuredInputs;
-        public GraphBuilder(MeasuredInputs measuredInputs)
+        private readonly IList<FlowData> _flowsData;
+        public GraphBuilder(IList<FlowData> flowsData)
         {
-            ArgumentNullException.ThrowIfNull(nameof(measuredInputs));
-            this.measuredInputs = measuredInputs;
+            ArgumentNullException.ThrowIfNull(flowsData, nameof(flowsData));
+            _flowsData = flowsData;
             vertexList = new List<Vertex>();
         }
 
         private void GetVertexList()
         {
-            for (int i = 0; i < measuredInputs.FlowsData.Count; i++)
+            for (int i = 0; i < _flowsData.Count; i++)
             {
-                var sourceId = measuredInputs.FlowsData[i].SourceId;
-                var destinationId = measuredInputs.FlowsData[i].DestinationId;
+                var sourceId = _flowsData[i].SourceId;
+                var destinationId = _flowsData[i].DestinationId;
 
                 if (sourceId != "null")
                 {
@@ -78,12 +78,12 @@
         public double[,] GetIncidenceMatrix()
         {
             GetVertexList();
-            var incidenceMatrix = new double[vertexList.Count, measuredInputs.FlowsData.Count];
+            var incidenceMatrix = new double[vertexList.Count, _flowsData.Count];
 
-            for (var flow = 0; flow < measuredInputs.FlowsData.Count; flow++)
+            for (var flow = 0; flow < _flowsData.Count; flow++)
             {
-                string sourceId = measuredInputs.FlowsData[flow].SourceId;
-                string destinationId = measuredInputs.FlowsData[flow].DestinationId;
+                string sourceId = _flowsData[flow].SourceId;
+                string destinationId = _flowsData[flow].DestinationId;
 
                 for (int vertex = 0; vertex < vertexList.Count; vertex++)
                 {

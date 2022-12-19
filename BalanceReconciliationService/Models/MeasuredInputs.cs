@@ -1,9 +1,11 @@
-﻿namespace BalanceReconciliationService.Models
+﻿using BalanceReconciliationService.Enums;
+
+namespace BalanceReconciliationService.Models
 {
     public class MeasuredInputs
     {
-        public ConstraintsSettings ConstraintsSettings { get; set; }
-        public List<FlowData> FlowsData { get; set; }
+        public  ConstraintsType ConstraintsType { get; set; }
+        public IList<FlowData> FlowsData { get; set; }
         
     }
 }
