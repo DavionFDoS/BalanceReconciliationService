@@ -9,10 +9,12 @@
   </PropertyGroup>
 
   <ItemGroup>
+    <Content Remove="InputData\ged-model-9-gross-errors.json" />
     <Content Remove="InputData\ged-two-errors.json" />
   </ItemGroup>
 
   <ItemGroup>
+    <None Include="InputData\ged-model-9-gross-errors.json" />
     <None Include="InputData\ged-two-errors.json" />
   </ItemGroup>
 

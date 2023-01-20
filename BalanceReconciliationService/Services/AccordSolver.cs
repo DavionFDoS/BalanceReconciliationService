@@ -134,7 +134,8 @@ namespace BalanceReconciliationService.Services
                     IsArtificial = _matrixDataPreparer.FlowsData[i].IsArtificial,
                     IsMeasured = _matrixDataPreparer.FlowsData[i].IsMeasured,
                     Tolerance = _matrixDataPreparer.FlowsData[i].Tolerance,
-                    Measured = _matrixDataPreparer.FlowsData[i].Measured
+                    Measured = _matrixDataPreparer.FlowsData[i].Measured,
+                    Correction = solver.Solution[i] - _matrixDataPreparer.FlowsData[i].Measured
                 });
             }
 

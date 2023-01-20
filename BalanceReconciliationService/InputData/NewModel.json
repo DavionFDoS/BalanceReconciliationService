@@ -1,0 +1,113 @@
+{
+  "gedSettings": {
+    "branching": 1,
+    "maxTreeHeight": 1000,
+    "maxSolutionsCount": 200
+  },
+  "errors": [
+    0
+  ],
+  "constraintsSettings": {
+    "type": 0
+  },
+  "flowsData": [
+    {
+      "id": "a25fca62-3815-49ae-b0a2-7726ad4724f2",
+      "sourceId": "null",
+      "destinationId": "00000000-0000-0000-0000-000000000001",
+      "name": "X1",
+      "measured": 1000.005,
+      "upperMetrologicalBound": 1000.205,
+      "lowerMetrologicalBound": 900.805,
+      "upperTechnologicalBound": 1100,
+      "lowerTechnologicalBound": 900,
+      "tolerance": 0.2,
+      "isMeasured": true,
+      "isExcluded": false
+    },
+    {
+      "id": "58a819ca-1a1b-4ef4-8d3a-39b388f3e435",
+      "sourceId": "00000000-0000-0000-0000-000000000001",
+      "destinationId": "null",
+      "name": "X2",
+      "measured": 3.033,
+      "upperMetrologicalBound": 3.155,
+      "lowerMetrologicalBound": 2.912,
+      "upperTechnologicalBound": 1000,
+      "lowerTechnologicalBound": 0,
+      "tolerance": 0.121,
+      "isMeasured": true,
+      "isExcluded": false
+    },
+    {
+      "id": "d240560e-61c1-4a57-8055-48a096481c4b",
+      "sourceId": "00000000-0000-0000-0000-000000000001",
+      "destinationId": "00000000-0000-0000-0000-000000000002",
+      "name": "X3",
+      "measured": 6.831,
+      "upperMetrologicalBound": 7.514,
+      "lowerMetrologicalBound": 6.148,
+      "upperTechnologicalBound": 1000,
+      "lowerTechnologicalBound": 0,
+      "tolerance": 0.683,
+      "isMeasured": true,
+      "isExcluded": false
+    },
+    {
+      "id": "5b5f992e-4b9b-4852-a972-bb666d6658db",
+      "sourceId": "00000000-0000-0000-0000-000000000002",
+      "destinationId": "null",
+      "name": "X4",
+      "measured": 1.985,
+      "upperMetrologicalBound": 2.025,
+      "lowerMetrologicalBound": 1.945,
+      "upperTechnologicalBound": 1000,
+      "lowerTechnologicalBound": 0,
+      "tolerance": 0.04,
+      "isMeasured": true,
+      "isExcluded": false
+    },
+    {
+      "id": "bb7e0f16-b372-4795-a78a-72168e3310f9",
+      "sourceId": "00000000-0000-0000-0000-000000000002",
+      "destinationId": "00000000-0000-0000-0000-000000000003",
+      "name": "X5",
+      "measured": 5.093,
+      "upperMetrologicalBound": 5.195,
+      "lowerMetrologicalBound": 4.991,
+      "upperTechnologicalBound": 1000,
+      "lowerTechnologicalBound": 0,
+      "tolerance": 0.102,
+      "isMeasured": true,
+      "isExcluded": false
+    },
+    {
+      "id": "e993b0d9-7e67-4045-812d-f63400cc9fa0",
+      "sourceId": "00000000-0000-0000-0000-000000000003",
+      "destinationId": "null",
+      "name": "X6",
+      "measured": 4.057,
+      "upperMetrologicalBound": 4.138,
+      "lowerMetrologicalBound": 3.976,
+      "upperTechnologicalBound": 1000,
+      "lowerTechnologicalBound": 0,
+      "tolerance": 0.081,
+      "isMeasured": true,
+      "isExcluded": false
+    },
+    {
+      "id": "f912d74a-560d-453f-856c-7f89a7fea299",
+      "sourceId": "00000000-0000-0000-0000-000000000003",
+      "destinationId": "null",
+      "name": "X7",
+      "measured": 0.991,
+      "upperMetrologicalBound": 1.011,
+      "lowerMetrologicalBound": 0.971,
+      "upperTechnologicalBound": 1000,
+      "lowerTechnologicalBound": 0,
+      "tolerance": 0.02,
+      "isMeasured": true,
+      "isExcluded": false
+    }
+  ]
+}

@@ -73,10 +73,10 @@ app.MapPost("/detectGlobalErrors", async Task<IEnumerable<GrossErrorDetectionRes
     return await Task.Run(() =>
     {
         var dataPreparer = new MatrixDataPreparer(gedInputs.FlowsData);
+        var constraintsType = gedInputs.ConstraintsType;
         var gedDataPreparer = new GedDataPreparer(gedInputs);
         var globalTestCalculator = new GlobalTestCalculator(dataPreparer);
         var grossErrorDetectionService = new GrossErrorDetectionService(globalTestCalculator);
-        var constraintsType = gedInputs.ConstraintsType;
         var branching = gedDataPreparer.Branching;
         var maxTreeHeight = gedDataPreparer.MaxTreeHeight;
         var maxSolutionsCount = gedDataPreparer.MaxSolutionsCount;

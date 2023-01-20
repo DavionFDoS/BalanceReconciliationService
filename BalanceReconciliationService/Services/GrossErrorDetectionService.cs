@@ -19,6 +19,7 @@ public class GrossErrorDetectionService : IGrossErrorDetectionService
         ICollection<FlowData> flows, ConstraintsType constraintsType,
         int branchCount, int maxTreeHeight, int maxSolutionsCount, ICollection<GrossErrorType> errorTypes)
     {
+        ArgumentNullException.ThrowIfNull(flows, nameof(flows));
 
         var grossErrorDetectionResults =
             GrossErrorDetectionByTree(flows, branchCount, maxTreeHeight, maxSolutionsCount, errorTypes)
@@ -34,9 +35,9 @@ public class GrossErrorDetectionService : IGrossErrorDetectionService
         foreach (var grossErrorDetectionResult in grossErrorDetectionResults)
         {
             var scenario = new List<FlowData>(flows);
-            foreach (var errorFlow in grossErrorDetectionResult.FlowsWithErrors)
+            foreach (var flowWithError in grossErrorDetectionResult.FlowsWithErrors)
             {
-                scenario.Add(errorFlow);
+                scenario.Add(flowWithError);
             }
 
             var dataPreparer = new MatrixDataPreparer(scenario);
@@ -45,18 +46,7 @@ public class GrossErrorDetectionService : IGrossErrorDetectionService
 
             var solution = solver.Solve();
 
-            var solutionFlows = new List<ReconciledFlowData>();
-
-            foreach (var solutionFlow in solution.ReconciledFlowDatas)
-            {
-                solutionFlows.Add(new ReconciledFlowData
-                {
-                    Id= solutionFlow.Id,
-                    SourceId= solutionFlow.SourceId,
-                    DestinationId= solutionFlow.DestinationId,
-                    
-                });
-            }
+            var solutionFlows = new List<ReconciledFlowData>(solution.ReconciledFlowDatas);
 
             var reducedFlows = HandleReconciledFlows(solutionFlows);
 
@@ -74,9 +64,11 @@ public class GrossErrorDetectionService : IGrossErrorDetectionService
     public IEnumerable<GrossErrorDetectionResult> GrossErrorDetectionByTree(IEnumerable<FlowData> flows,
         int branchCount, int maxTreeHeight, int maxSolutionsCount, ICollection<GrossErrorType> errorTypes)
     {
-        var thresholdValue = .02;
+        ArgumentNullException.ThrowIfNull(flows, nameof(flows));
 
-        var treeStorage = new GedTreeNode<GlrSampleFlow>(null, null, 0);
+        var thresholdValue = 1.0;
+
+        var treeStorage = new GedTreeNode<GlrResult>(null, null, 0);
 
         var scenаrio = flows.ToList();
 
@@ -96,7 +88,7 @@ public class GrossErrorDetectionService : IGrossErrorDetectionService
 
         if (globalTestResult >= thresholdValue)
         {
-            var solutions = PerformGeneralizedLikelihoodRatioTest(scenаrio, globalTestResult, errorTypes)
+            var solutions = GLRTest(scenаrio, globalTestResult, errorTypes)
                 .Take(branchCount);
 
             foreach (var solution in solutions)
@@ -133,7 +125,7 @@ public class GrossErrorDetectionService : IGrossErrorDetectionService
                             throw new Exception(ErrorsResources.GedTreeNodeDataError);
                         }
 
-                        var flowWithError = treeNode.Data?.Flow;
+                        var flowWithError = treeNodeData.Flow;
                         if (flowWithError == null)
                         {
                             throw new Exception(ErrorsResources.GrossErrorDetectionWithTreeError);
@@ -159,8 +151,7 @@ public class GrossErrorDetectionService : IGrossErrorDetectionService
 
                         scenarioFlows.Add(treeNodeDataFlow);
 
-                        solutions = PerformGeneralizedLikelihoodRatioTest(scenarioFlows, globalTestResult,
-                                errorTypes)
+                        solutions = GLRTest(scenarioFlows, globalTestResult, errorTypes)
                             .Take(branchCount);
 
                         if (solutions == null)
@@ -183,12 +174,9 @@ public class GrossErrorDetectionService : IGrossErrorDetectionService
         }
 
         var leaves = treeStorage.GetLeaves(treeStorage);
-        if (leaves == null)
-        {
-            throw new Exception(ErrorsResources.GrossErrorDetectionWithTreeError);
-        }
+        ArgumentNullException.ThrowIfNull(leaves);
 
-        var sceneries = new List<IEnumerable<GlrSampleFlow>>();
+        var sceneries = new List<IEnumerable<GlrResult>>();
         foreach (var leaf in leaves)
         {
             if (leaf == null)
@@ -212,7 +200,7 @@ public class GrossErrorDetectionService : IGrossErrorDetectionService
                 throw new Exception(ErrorsResources.GrossErrorDetectionWithTreeError);
             }
 
-            var glrIterationResults = new List<GlrSampleFlow> { leafData };
+            var glrIterationResults = new List<GlrResult> { leafData };
             var parentNodes = leaf.GetParentHierarchy().Where(node => node.Parent != null).Select(node => node.Data);
 
             if (parentNodes == null)
@@ -237,22 +225,21 @@ public class GrossErrorDetectionService : IGrossErrorDetectionService
         });
     }
 
-    private IEnumerable<GlrSampleFlow> PerformGeneralizedLikelihoodRatioTest(ICollection<FlowData> flows,
+    private IEnumerable<GlrResult> GLRTest(ICollection<FlowData> flows,
          double globalTestValue, ICollection<GrossErrorType> errorTypes, bool async = true)
     {
+        ArgumentNullException.ThrowIfNull(flows, nameof(flows));
+
         var artificialFlows = CreateArtificialFlows(flows, errorTypes);
 
-        var glrResult = new List<GlrSampleFlow>();
+        var glrResult = new List<GlrResult>();
 
-        var performGlrIteration = (FlowData artificialFlow) =>
+        var GlrIteration = (FlowData artificialFlow) =>
         {
-            var scenario = new List<FlowData>(flows);
-            if (scenario == null)
+            var scenario = new List<FlowData>(flows)
             {
-                throw new Exception(ErrorsResources.GeneralizedLikelihoodRatioTestError);
-            }
-
-            scenario.Add(artificialFlow);
+                artificialFlow
+            };
 
             var dataPreparer = new MatrixDataPreparer(scenario);
 
@@ -265,7 +252,7 @@ public class GrossErrorDetectionService : IGrossErrorDetectionService
 
             var delta = globalTestValue - globalTest;
 
-            return new GlrSampleFlow()
+            return new GlrResult()
             {
                 Value = delta,
                 GlobalTestResult = globalTest,
@@ -277,15 +264,14 @@ public class GrossErrorDetectionService : IGrossErrorDetectionService
         {
             var tasks = new List<Task>();
 
-
             foreach (var artificialFlow in artificialFlows)
             {
-                tasks.Add(Task.Run(() => performGlrIteration(artificialFlow)));
+                tasks.Add(Task.Run(() => GlrIteration(artificialFlow)));
             }
 
             Task.WaitAll(tasks.ToArray());
 
-            var glrIterationResults = tasks.Select(task => (task as Task<GlrSampleFlow>)?.Result).ToList();
+            var glrIterationResults = tasks.Select(task => (task as Task<GlrResult>)?.Result).ToList();
             if (glrIterationResults == null || glrIterationResults.Any(res => res == null))
             {
                 throw new Exception(ErrorsResources.GeneralizedLikelihoodRatioTestError);
@@ -296,7 +282,7 @@ public class GrossErrorDetectionService : IGrossErrorDetectionService
 
         foreach (var artificialFlow in artificialFlows)
         {
-            glrResult.Add(performGlrIteration(artificialFlow));
+            glrResult.Add(GlrIteration(artificialFlow));
         }
 
         return glrResult.OrderByDescending(glr => glr.Value);
@@ -354,12 +340,7 @@ public class GrossErrorDetectionService : IGrossErrorDetectionService
                     continue;
                 }
 
-                // Если поток не найден, то создаем новый поток
                 var id = Guid.NewGuid();
-                while (flows.Any(f => f.Id == id))
-                {
-                    id = Guid.NewGuid();
-                }
 
                 artificialFlows.Add(new FlowData()
                 {
