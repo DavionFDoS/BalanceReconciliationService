@@ -1,6 +1,7 @@
 ﻿using BalanceReconciliationService.Enums;
 using BalanceReconciliationService.Models;
 using Microsoft.Extensions.DependencyInjection;
+using System;
 using System.Data;
 using System.Resources;
 
@@ -35,12 +36,13 @@ public class GrossErrorDetectionService : IGrossErrorDetectionService
         foreach (var grossErrorDetectionResult in grossErrorDetectionResults)
         {
             var scenario = new List<FlowData>(flows);
+
+            var dataPreparer = new MatrixDataPreparer(scenario);
+
             foreach (var flowWithError in grossErrorDetectionResult.FlowsWithErrors)
             {
                 scenario.Add(flowWithError);
             }
-
-            var dataPreparer = new MatrixDataPreparer(scenario);
 
             var solver = new AccordSolver(dataPreparer, constraintsType);
 
@@ -236,10 +238,9 @@ public class GrossErrorDetectionService : IGrossErrorDetectionService
 
         var GlrIteration = (FlowData artificialFlow) =>
         {
-            var scenario = new List<FlowData>(flows)
-            {
-                artificialFlow
-            };
+            var scenario = new List<FlowData>(flows);
+
+            scenario.Add(artificialFlow);
 
             var dataPreparer = new MatrixDataPreparer(scenario);
 
@@ -370,8 +371,6 @@ public class GrossErrorDetectionService : IGrossErrorDetectionService
 
         var resultedFlows = new List<ReconciledFlowWithErrorType>();
 
-        //use Mapper
-
         foreach (var flow in flows)
         {
             if (flow.IsArtificial)
@@ -410,6 +409,9 @@ public class GrossErrorDetectionService : IGrossErrorDetectionService
                     IsMeasured = flow.IsMeasured,
                     IsExcluded = flow.IsExcluded,
                     IsArtificial = flow.IsArtificial,
+                    ReconciledValue = flow.ReconciledValue,
+                    Correction = flow.ReconciledValue - flow.Measured,
+                    GrossErrorType = GrossErrorType.Measure
                 });
             }
         }
@@ -427,11 +429,6 @@ public class GrossErrorDetectionService : IGrossErrorDetectionService
                 resultedFlows.Add(artificialFlow);
                 continue;
             }
-
-            var index = resultedFlows.IndexOf(identicalFlow);
-            resultedFlows[index].ReconciledValue += artificialFlow.ReconciledValue;
-            resultedFlows[index].Correction = resultedFlows[index].ReconciledValue - resultedFlows[index].Measured;
-            resultedFlows[index].GrossErrorType = GrossErrorType.Measure;
         }
 
         return resultedFlows;
