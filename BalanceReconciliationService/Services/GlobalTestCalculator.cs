@@ -55,8 +55,7 @@ namespace BalanceReconciliationService.Services
             // Вычисление вектора дисбалансов
             var r = aMatrix * x0Vector;
             var v = aMatrix * sigma * aTransposedMatrix;
-            var vv = v.ToArray();
-            vv = vv.PseudoInverse();
+            var vv = v.ToArray().PseudoInverse();
             v = SparseMatrix.OfArray(vv);
             var result = r * v * r.ToColumnMatrix();
             var chi = ChiSquared.InvCDF(aMatrix.RowCount, 1 - 0.05);
