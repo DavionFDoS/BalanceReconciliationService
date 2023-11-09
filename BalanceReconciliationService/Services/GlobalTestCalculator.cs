@@ -40,7 +40,7 @@ namespace BalanceReconciliationService.Services
             var aTransposedMatrix = SparseMatrix.OfMatrix(aMatrix.Transpose());
             var x0Vector = SparseVector.OfEnumerable(x0);
 
-            // Введение погрешностей по неизмеряемым потокам
+            // Введение погрешностей по измеряемым потокам
             var xStd = SparseVector.OfEnumerable(tolerance) / 1.96;
 
             for (var i = 0; i < xStd.Count; i++)

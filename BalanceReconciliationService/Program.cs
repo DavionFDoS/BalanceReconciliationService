@@ -1,3 +1,4 @@
+using Accord.Statistics;
 using BalanceReconciliationService.Extensions;
 using Microsoft.AspNetCore.Mvc;
 using Serilog.Sinks.Elasticsearch;
@@ -106,6 +107,30 @@ app.MapPost("/detectAndReconcileGlobalErrors", async Task<IEnumerable<GrossError
         var reconciledFlowsWithErrors = grossErrorDetectionService.GrossErrorDetectionAndReconcilationByTree(dataPreparer.FlowsData, constraintsType, branching, maxTreeHeight, maxSolutionsCount, errors);
 
         return reconciledFlowsWithErrors;
+    });
+})
+.RequireCors("allowAny");
+
+app.MapPost("/analyzeMeasuringSystem", async Task<ToleranceAnalysisResult> (MeasuredInputs measuredInputs) =>
+{
+    return await Task.Run(() =>
+    {
+        var dataPreparer = new MatrixDataPreparer(measuredInputs.FlowsData);
+        var solver = new AccordSolver(dataPreparer, measuredInputs.ConstraintsType);
+        var toleranceAnalysis = new ToleranceAnalysis(dataPreparer);
+        var relativeTolerance = toleranceAnalysis.GetRelativeMeasurementError();
+        var sigmaWithStar = toleranceAnalysis.GetSigmaDiagonalToJSON();
+        var reconciledValues = solver.Solve().ReconciledFlowDatas.Select(x => x.ReconciledValue);
+        var relativeToleranceOfReconciledValues = toleranceAnalysis.GetRelativeMeasurementErrorOfReconciledValues();
+        var mean = dataPreparer.Tolerance.Mean();
+        return new ToleranceAnalysisResult
+        {
+            RelativeTolerance = relativeTolerance,
+            RelativeToleranceArray = toleranceAnalysis.RelativeToleranceArray,
+            SigmaWithStar = sigmaWithStar,
+            RelativeToleranceOfReconciledValues = relativeToleranceOfReconciledValues,
+            RelativeToleranceReconciledArray = toleranceAnalysis.RelativeToleranceReconciledArray
+        };
     });
 })
 .RequireCors("allowAny");
